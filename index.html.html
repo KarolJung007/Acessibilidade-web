@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="pt-BR" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impacto da Acessibilidade no Mundo Web | Web Inclusiva & IA</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        accessible: {
+                            blue: '#005A9C',
+                            darkBlue: '#003366',
+                            yellow: '#FFD700',
+                            focus: '#FFBF00'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        :root {
+            --font-scale: 1;
+            --base-font-size: 16px;
+        }
+
+        html {
+            font-size: calc(var(--base-font-size) * var(--font-scale));
+            scroll-behavior: smooth;
+        }
+
+        /* Estilos de Foco Altamente Visíveis para Navegação por Teclado (WCAG AAA) */
+        *:focus-visible {
+            outline: 4px solid #FF8C00 !important;
+            outline-offset: 3px !important;
+            box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.8) !important;
+        }
+
+        /* Modo de Alto Contraste */
+        body.high-contrast {
+            background-color: #000000 !important;
+            color: #FFFFFF !important;
+        }
+
+        body.high-contrast a {
+            color: #FFFF00 !important;
+            text-decoration: underline !important;
+        }
+
+        body.high-contrast button {
+            background-color: #000000 !important;
+            color: #FFFFFF !important;
+            border: 2px solid #FFFFFF !important;
+        }
+
+        body.high-contrast .card-bg {
+            background-color: #121212 !important;
+            border: 2px solid #FFFFFF !important;
+        }
+
+        body.high-contrast .accent-bg {
+            background-color: #FFFF00 !important;
+            color: #000000 !important;
+        }
+
+        /* Atalho para pular direto para o conteúdo principal */
+        .skip-link {
+            position: absolute;
+            top: -50px;
+            left: 0;
+            background: #005A9C;
+            color: white;
+            padding: 12px 24px;
+            z-index: 100;
+            font-weight: bold;
+            transition: top 0.2s ease;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Efeito visual pulsante para simulador de áudio e Libras ativo */
+        .pulse-active {
+            animation: pulse-border 1.5s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(0, 90, 156, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 90, 156, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 90, 156, 0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans leading-relaxed transition-colors duration-200">
+
+    <a href="#conteudo-principal" class="skip-link rounded-b-lg shadow-lg">Pular para o Conteúdo Principal (Atalho Alt + 1)</a>
+
+    <!-- BARRA FIXA DE CONTROLES DE ACESSIBILIDADE -->
+    <header role="banner" class="sticky top-0 z-50 bg-blue-900 text-white shadow-xl border-b-4 border-yellow-400">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            
+            <!-- Logo e Título -->
+            <div class="flex items-center space-x-3">
+                <i data-lucide="accessibility" class="w-8 h-8 text-yellow-400" aria-hidden="true"></i>
+                <span class="font-bold text-lg md:text-xl tracking-wide">AcessibilizaWeb</span>
+            </div>
+
+            <!-- Painel de Ferramentas Assistivas -->
+            <nav aria-label="Painel de Ferramentas de Acessibilidade" class="flex flex-wrap items-center gap-2 md:gap-4">
+                
+                <!-- Controle de Fonte -->
+                <div class="flex items-center bg-blue-950 rounded-lg p-1 border border-blue-700" role="group" aria-label="Ajuste do tamanho do texto">
+                    <button id="btn-dec-font" onclick="changeFontSize(-0.1)" class="px-3 py-1.5 hover:bg-blue-800 rounded font-bold text-sm flex items-center gap-1 transition" title="Diminuir tamanho do texto (A-)" aria-label="Diminuir tamanho da fonte">
+                        <span>A-</span>
+                    </button>
+                    <button id="btn-reset-font" onclick="resetFontSize()" class="px-3 py-1.5 hover:bg-blue-800 rounded font-bold text-sm flex items-center gap-1 border-x border-blue-800 transition" title="Restaurar tamanho padrão do texto (A)" aria-label="Restaurar tamanho da fonte original">
+                        <span>A</span>
+                    </button>
+                    <button id="btn-inc-font" onclick="changeFontSize(0.1)" class="px-3 py-1.5 hover:bg-blue-800 rounded font-bold text-sm flex items-center gap-1 transition" title="Aumentar tamanho do texto (A+)" aria-label="Aumentar tamanho da fonte">
+                        <span>A+</span>
+                    </button>
+                </div>
+
+                <!-- Chaveador de Alto Contraste -->
+                <button id="btn-contrast" onclick="toggleContrast()" class="px-3 py-2 bg-yellow-400 text-blue-950 font-bold rounded-lg hover:bg-yellow-300 transition flex items-center gap-2 shadow-sm" aria-label="Alternar modo de alto contraste">
+                    <i data-lucide="contrast" class="w-4 h-4" aria-hidden="true"></i>
+                    <span class="hidden sm:inline">Alto Contraste</span>
+                </button>
+
+                <!-- Leitor de Tela Sintetizador (Web Speech API) -->
+                <button id="btn-speech-page" onclick="readPageText()" class="px-3 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-500 transition flex items-center gap-2 shadow-sm" aria-label="Ouvir leitura do conteúdo da página em voz alta">
+                    <i data-lucide="volume-2" class="w-4 h-4" aria-hidden="true"></i>
+                    <span class="hidden sm:inline" id="speech-btn-label">Ler Página</span>
+                </button>
+
+                <!-- Modal / Janela de Libras -->
+                <button id="btn-libras-toggle" onclick="toggleLibrasWidget()" class="px-3 py-2 bg-purple-700 text-white font-bold rounded-lg hover:bg-purple-600 transition flex items-center gap-2 shadow-sm" aria-label="Abrir assistente visual e áudio em Libras">
+                    <i data-lucide="hand" class="w-4 h-4" aria-hidden="true"></i>
+                    <span>VLibras / Suporte</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- FLOATING LIBRAS SIMULATOR / WIDGET -->
+    <aside id="libras-widget" class="hidden fixed bottom-6 right-6 z-50 w-80 bg-slate-900 text-white rounded-xl shadow-2xl border-2 border-purple-500 overflow-hidden flex flex-col" aria-label="Tradutor e Interpretação em Libras">
+        <div class="bg-purple-900 p-3 flex justify-between items-center border-b border-purple-700">
+            <div class="flex items-center gap-2 font-bold text-sm">
+                <i data-lucide="hand" class="w-4 h-4 text-yellow-300" aria-hidden="true"></i>
+                <span>Intérprete em Libras</span>
+            </div>
+            <button onclick="toggleLibrasWidget()" class="text-gray-300 hover:text-white p-1 rounded" aria-label="Fechar janela de Libras">
+                <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+            </button>
+        </div>
+        
+        <!-- Canvas/Vídeo Simulação do Avatar em Libras -->
+        <div class="relative bg-slate-950 h-52 flex flex-col items-center justify-center p-2 text-center">
+            <div id="libras-avatar-box" class="flex flex-col items-center justify-center">
+                <div class="w-20 h-20 rounded-full bg-purple-800 border-4 border-purple-400 flex items-center justify-center mb-2 animate-bounce">
+                    <i data-lucide="user-check" class="w-10 h-10 text-white" aria-hidden="true"></i>
+                </div>
+                <p id="libras-status-text" class="text-xs text-purple-200 font-semibold px-2">
+                    Tradutor Visual Pronto. Clique nos áudios em Libras pelo site.
+                </p>
+            </div>
+            
+            <!-- Indicador visual de sinais sendo executados -->
+            <div id="libras-hands-animation" class="hidden flex items-center gap-3 mt-2">
+                <i data-lucide="sparkles" class="w-6 h-6 text-yellow-400 animate-spin" aria-hidden="true"></i>
+                <span class="text-xs font-bold text-yellow-300">Sinalizando em Libras + Narração Explicativa...</span>
+            </div>
+        </div>
+
+        <div class="p-3 bg-slate-900 text-xs border-t border-slate-800 flex justify-between items-center">
+            <span class="text-gray-400">Compatível com VLibrasGov</span>
+            <button onclick="playLibrasAudio('Bem-vindo ao site AcessibilizaWeb. Aqui você encontra suporte completo em Língua Brasileira de Sinais, legendas e áudio-descrição.')" class="bg-purple-700 hover:bg-purple-600 text-white px-2 py-1 rounded flex items-center gap-1 font-semibold" aria-label="Ouvir instrução de uso de Libras">
+                <i data-lucide="volume-2" class="w-3 h-3" aria-hidden="true"></i>
+                <span>Explicar Libras</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL DO SITE -->
+    <main id="conteudo-principal" tabindex="-1" class="max-w-7xl mx-auto px-4 py-8 space-y-16">
+
+        <!-- 1. HERO SECTION -->
+        <section class="card-bg bg-white rounded-2xl p-6 md:p-10 shadow-lg border border-gray-200 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center" aria-labelledby="titulo-hero">
+            <div class="lg:col-span-7 space-y-6">
+                <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-900 rounded-full font-bold text-xs uppercase tracking-wider">
+                    <i data-lucide="globe" class="w-4 h-4" aria-hidden="true"></i>
+                    Inclusão Digital Sem Barreiras
+                </div>
+                
+                <h1 id="titulo-hero" class="text-3xl md:text-5xl font-extrabold text-blue-950 leading-tight">
+                    O Impacto da Acessibilidade no Mundo Web
+                </h1>
+                
+                <p class="text-lg text-gray-700 leading-relaxed">
+                    A web foi projetada para funcionar para todas as pessoas, independentemente de suas capacidades físicas, sensoriais ou cognitivas. Descubra como a <strong>Inteligência Artificial</strong> e o <strong>Design Universal</strong> estão quebrando barreiras e redefinindo o futuro da experiência digital.
+                </p>
+
+                <!-- Botões de Ação Assistiva do Hero -->
+                <div class="flex flex-wrap items-center gap-4 pt-2">
+                    <button onclick="speakText('O Impacto da Acessibilidade no Mundo Web. A web foi projetada para funcionar para todas as pessoas, independentemente de suas capacidades físicas, sensoriais ou cognitivas. Descubra como a Inteligência Artificial e o Design Universal estão quebrando barreiras.')" class="px-5 py-3 bg-blue-800 hover:bg-blue-900 text-white font-bold rounded-xl shadow-md transition flex items-center gap-2" aria-label="Ouvir narração da introdução do site">
+                        <i data-lucide="volume-2" class="w-5 h-5" aria-hidden="true"></i>
+                        <span>Ouvir Introdução (Áudio)</span>
+                    </button>
+
+                    <button onclick="playLibrasAudio('Título: O Impacto da Acessibilidade no Mundo Web. Introdução: A tecnologia web deve ser acessível para todas as pessoas com deficiência. A Inteligência Artificial ajuda a criar legendas, descrições e traduções em Libras.')" class="px-5 py-3 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl shadow-md transition flex items-center gap-2" aria-label="Ouvir áudio explicativo em Libras sobre a introdução">
+                        <i data-lucide="hand" class="w-5 h-5" aria-hidden="true"></i>
+                        <span>Áudio/Explicação em Libras</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Imagem com Alt Text e Descrição Longa -->
+            <div class="lg:col-span-5 flex flex-col items-center">
+                <div class="relative w-full rounded-2xl overflow-hidden shadow-md border-2 border-gray-100">
+                    <img 
+                        src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80" 
+                        alt="Mulher cega utilizando um computador com linha Braille e leitor de tela em um escritório moderno e iluminado." 
+                        class="w-full h-64 md:h-80 object-cover"
+                        onerror="this.src='https://placehold.co/800x600/003366/FFFFFF?text=Tecnologia+Assistiva+e+Acessibilidade'"
+                    />
+                    <div class="bg-gray-900 text-white p-3 text-xs flex justify-between items-center">
+                        <span class="font-medium">Tecnologia Assistiva em Ação</span>
+                        <button onclick="toggleDetails('desc-hero-img')" class="text-yellow-400 font-bold hover:underline" aria-expanded="false" aria-controls="desc-hero-img">
+                            + Descrição Detalhada
+                        </button>
+                    </div>
+                </div>
+                <!-- Descrição Longa Expansível (WCAG) -->
+                <div id="desc-hero-img" class="hidden mt-3 p-4 bg-gray-100 dark:bg-gray-800 text-sm rounded-lg text-gray-800 dark:text-gray-200 border border-gray-300 w-full">
+                    <strong>Descrição Detalhada da Imagem:</strong> Fotografia de uma profissional sorridente em seu ambiente de trabalho. Ela está usando fones de ouvido e utilizando um dispositivo display Braille conectado ao seu notebook, demonstrando a integração fluida de leitores de tela com a web modernizada.
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. SEÇÃO DE VÍDEOS SOBRE IA E ACESSIBILIDADE -->
+        <section class="space-y-6" aria-labelledby="titulo-secao-videos">
+            <div class="border-l-4 border-blue-800 pl-4">
+                <h2 id="titulo-secao-videos" class="text-2xl md:text-3xl font-bold text-blue-950">
+                    Inteligência Artificial na Acessibilidade Web
+                </h2>
+                <p class="text-gray-600 mt-1">
+                    Como algoritmos de IA estão revolucionando o reconhecimento de imagens, geração de legendas em tempo real e acessibilidade atitudinal.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Player de Vídeo Acessível Simulado -->
+                <div class="lg:col-span-7 card-bg bg-white p-5 rounded-2xl shadow-md border border-gray-200 space-y-4">
+                    <div class="relative bg-black rounded-xl overflow-hidden aspect-video flex flex-col justify-between p-4 text-white shadow-inner">
+                        <!-- Canvas / Simulação do Vídeo de IA -->
+                        <div id="video-canvas" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center">
+                            <i data-lucide="cpu" class="w-16 h-16 text-yellow-400 mb-3 animate-pulse" aria-hidden="true"></i>
+                            <h3 class="font-bold text-xl text-yellow-300" id="video-sim-title">
+                                Vídeo: IA e Descrição Automática de Conteúdo
+                            </h3>
+                            <p class="text-xs text-gray-300 max-w-md mt-2" id="video-sim-subtitle">
+                                Clique em Play para iniciar o vídeo demonstrativo com áudio-descrição e legendas.
+                            </p>
+                        </div>
+
+                        <!-- Banner de Legenda em Tempo Real (CC) -->
+                        <div id="cc-overlay" class="relative z-10 mt-auto bg-black/85 text-yellow-300 p-3 rounded text-center font-bold text-sm md:text-base border border-yellow-500/30">
+                            [Legendas CC]: "A inteligência artificial transforma linhas de código em experiências auditivas e visuais acessíveis para todos."
+                        </div>
+                    </div>
+
+                    <!-- Controles Customizados do Vídeo -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 bg-gray-100 p-3 rounded-xl border border-gray-200">
+                        <div class="flex items-center gap-2">
+                            <button id="btn-play-video" onclick="toggleVideoPlay()" class="p-2.5 bg-blue-800 text-white rounded-lg hover:bg-blue-900 transition" aria-label="Reproduzir ou Pausar Vídeo de IA">
+                                <i data-lucide="play" id="icon-play" class="w-5 h-5" aria-hidden="true"></i>
+                            </button>
+                            <button onclick="toggleCC()" class="px-3 py-2 bg-gray-700 text-white text-xs font-bold rounded-lg hover:bg-gray-800 transition" aria-label="Ativar ou desativar legendas ocultas (CC)">
+                                CC (Legendas)
+                            </button>
+                            <button onclick="speakAudioDescription()" class="px-3 py-2 bg-emerald-700 text-white text-xs font-bold rounded-lg hover:bg-emerald-800 transition flex items-center gap-1" aria-label="Ouvir Áudio-Descrição do Vídeo">
+                                <i data-lucide="eye" class="w-4 h-4" aria-hidden="true"></i>
+                                <span>Áudio-Descrição</span>
+                            </button>
+                        </div>
+
+                        <button onclick="playLibrasAudio('Vídeo sobre Inteligência Artificial mostrando como leitores de tela e legendas automáticas ajudam pessoas surdas e cegas a navegarem na internet.')" class="px-3 py-2 bg-purple-700 text-white text-xs font-bold rounded-lg hover:bg-purple-800 transition flex items-center gap-1" aria-label="Ouvir versão em Libras para deficientes auditivos">
+                            <i data-lucide="hand" class="w-4 h-4" aria-hidden="true"></i>
+                            <span>Libras do Vídeo</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Transcrição do Vídeo ao Lado -->
+                <div class="lg:col-span-5 card-bg bg-white p-6 rounded-2xl shadow-md border border-gray-200 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-lg text-blue-950 flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-5 h-5 text-blue-800" aria-hidden="true"></i>
+                                Transcrição Completa do Vídeo
+                            </h3>
+                            <button onclick="speakText(document.getElementById('transcricao-video').innerText)" class="text-xs bg-blue-100 text-blue-900 px-2 py-1 rounded font-bold hover:bg-blue-200" aria-label="Ouvir transcrição em áudio">
+                                Ouvir Texto
+                            </button>
+                        </div>
+                        
+                        <div id="transcricao-video" class="space-y-3 text-sm text-gray-700 max-h-64 overflow-y-auto p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <p><strong>[00:01] Narrador:</strong> A Inteligência Artificial não é apenas sobre automação de tarefas, é sobre equidade digital.</p>
+                            <p><strong>[00:08] Narrador:</strong> Com leitores visuais baseados em visão computacional, imagens sem texto alternativo agora são descritas em tempo real com precisão superior a 95%.</p>
+                            <p><strong>[00:18] Narrador:</strong> Além disso, modelos de tradução neural convertem textos em tempo real para a Língua Brasileira de Sinais (Libras), conectando milhões de pessoas.</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-gray-200 text-xs text-gray-500">
+                        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 inline mr-1" aria-hidden="true"></i>
+                        Conforme norma WCAG 2.1 - Critério 1.2.2 (Legendas)
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. GALERIA DE FOTOS ILUSTRATIVAS E ACESSÍVEIS -->
+        <section class="space-y-6" aria-labelledby="titulo-galeria">
+            <div class="border-l-4 border-yellow-500 pl-4">
+                <h2 id="titulo-galeria" class="text-2xl md:text-3xl font-bold text-blue-950">
+                    Galeria Ilustrativa: Pilares da Inclusão Web
+                </h2>
+                <p class="text-gray-600 mt-1">
+                    Explore como a acessibilidade beneficia pessoas com diferentes necessidades e amplia o alcance de qualquer site.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <!-- Card Foto 1 -->
+                <article class="card-bg bg-white rounded-2xl overflow-hidden shadow-md border border-gray-200 flex flex-col justify-between">
+                    <div>
+                        <img 
+                            src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=600&q=80" 
+                            alt="Equipe diversificada em uma reunião de trabalho em volta de uma mesa com notebooks e papéis de projeto." 
+                            class="w-full h-48 object-cover"
+                            onerror="this.src='https://placehold.co/600x400/003366/FFFFFF?text=Design+Inclusivo'"
+                        />
+                        <div class="p-5 space-y-2">
+                            <h3 class="font-bold text-lg text-blue-950">1. Design Universal</h3>
+                            <p class="text-sm text-gray-600">
+                                Desenvolver pensando em todos desde o primeiro protótipo reduz custos de adaptação e melhora a experiência de todos os usuários.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="p-5 pt-0 space-y-2">
+                        <button onclick="toggleDetails('desc-galeria-1')" class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-blue-900 font-bold text-xs rounded-lg transition" aria-expanded="false" aria-controls="desc-galeria-1">
+                            + Descrição Longa & Áudio
+                        </button>
+                        <div id="desc-galeria-1" class="hidden p-3 bg-blue-50 text-xs text-blue-950 rounded-lg space-y-2">
+                            <p><strong>Descrição Detalhada:</strong> Foto com plano aberto mostrando cinco profissionais de diferentes origens e idades colaborando em um escritório moderno, discutindo protótipos de interfaces acessíveis.</p>
+                            <button onclick="speakText('Design Universal. Foto de uma equipe colaborativa trabalhando em acessibilidade digital.')" class="bg-blue-800 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+                                <i data-lucide="volume-2" class="w-3 h-3" aria-hidden="true"></i> Ouvir
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Card Foto 2 -->
+                <article class="card-bg bg-white rounded-2xl overflow-hidden shadow-md border border-gray-200 flex flex-col justify-between">
+                    <div>
+                        <img 
+                            src="https://images.unsplash.com/photo-1584697964358-3e14ca57658b?auto=format&fit=crop&w=600&q=80" 
+                            alt="Mãos digitando em um teclado com teclas de alto contraste e iluminação ajustada." 
+                            class="w-full h-48 object-cover"
+                            onerror="this.src='https://placehold.co/600x400/003366/FFFFFF?text=Teclado+e+Navegacao'"
+                        />
+                        <div class="p-5 space-y-2">
+                            <h3 class="font-bold text-lg text-blue-950">2. Navegação por Teclado</h3>
+                            <p class="text-sm text-gray-600">
+                                Pessoas com deficiência motora navegam na web sem mouse. Foco visível e ordem de tabulação coerente são vitais.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="p-5 pt-0 space-y-2">
+                        <button onclick="toggleDetails('desc-galeria-2')" class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-blue-900 font-bold text-xs rounded-lg transition" aria-expanded="false" aria-controls="desc-galeria-2">
+                            + Descrição Longa & Áudio
+                        </button>
+                        <div id="desc-galeria-2" class="hidden p-3 bg-blue-50 text-xs text-blue-950 rounded-lg space-y-2">
+                            <p><strong>Descrição Detalhada:</strong> Foto em close-up de um teclado de computador. Destaca-se o indicador de foco em uma tecla amarela, simbolizando a navegação focada via tecla TAB.</p>
+                            <button onclick="speakText('Navegação por Teclado. Garantindo usabilidade sem depender do uso do mouse.')" class="bg-blue-800 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+                                <i data-lucide="volume-2" class="w-3 h-3" aria-hidden="true"></i> Ouvir
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Card Foto 3 -->
+                <article class="card-bg bg-white rounded-2xl overflow-hidden shadow-md border border-gray-200 flex flex-col justify-between">
+                    <div>
+                        <img 
+                            src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=600&q=80" 
+                            alt="Pessoa sorrindo utilizando smartphone com fones de ouvido durante uma viagem de transporte público." 
+                            class="w-full h-48 object-cover"
+                            onerror="this.src='https://placehold.co/600x400/003366/FFFFFF?text=Acessibilidade+Mobile'"
+                        />
+                        <div class="p-5 space-y-2">
+                            <h3 class="font-bold text-lg text-blue-950">3. Comunicação Multimodal</h3>
+                            <p class="text-sm text-gray-600">
+                                Combinar texto, áudio, vídeos legendados e suporte em Libras garante que o conteúdo alcance 100% da audiência.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="p-5 pt-0 space-y-2">
+                        <button onclick="toggleDetails('desc-galeria-3')" class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-blue-900 font-bold text-xs rounded-lg transition" aria-expanded="false" aria-controls="desc-galeria-3">
+                            + Descrição Longa & Áudio
+                        </button>
+                        <div id="desc-galeria-3" class="hidden p-3 bg-blue-50 text-xs text-blue-950 rounded-lg space-y-2">
+                            <p><strong>Descrição Detalhada:</strong> Imagem de uma jovem interagindo com seu aplicativo móvel acessível usando recursos de síntese de áudio e atalhos de toque adaptados.</p>
+                            <button onclick="speakText('Comunicação Multimodal. Unindo recursos de áudio, legenda e sinais em Libras.')" class="bg-blue-800 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+                                <i data-lucide="volume-2" class="w-3 h-3" aria-hidden="true"></i> Ouvir
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+
+        <!-- 4. SEÇÃO DE PODCAST SOBRE O FUTURO DA WEB INCLUSIVA -->
+        <section class="card-bg bg-gradient-to-br from-blue-900 to-indigo-950 text-white rounded-3xl p-6 md:p-10 shadow-2xl space-y-8" aria-labelledby="titulo-podcast">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-blue-800 pb-6">
+                <div>
+                    <span class="bg-yellow-400 text-blue-950 px-3 py-1 rounded-full text-xs font-extrabold uppercase">
+                        Podcast Episódio #01
+                    </span>
+                    <h2 id="titulo-podcast" class="text-2xl md:text-4xl font-extrabold mt-2 text-white">
+                        O Futuro da Web Inclusiva & Inteligência Artificial
+                    </h2>
+                </div>
+                
+                <button onclick="playLibrasAudio('Podcast Episódio 01: O Futuro da Web Inclusiva e Inteligência Artificial. Apresentado por especialistas em acessibilidade digital.')" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 border border-purple-400" aria-label="Ouvir resumo do Podcast em Libras">
+                    <i data-lucide="hand" class="w-5 h-5" aria-hidden="true"></i>
+                    <span>Resumo em Libras</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <!-- Player do Podcast Customizado -->
+                <div class="lg:col-span-5 bg-blue-950/80 p-6 rounded-2xl border border-blue-700/60 space-y-6 shadow-lg">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 bg-yellow-400 rounded-xl flex items-center justify-center text-blue-950 shadow-md">
+                            <i data-lucide="mic" class="w-8 h-8" aria-hidden="true"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg text-white">Acessibilidade na Prática</h3>
+                            <p class="text-xs text-blue-200">Duração: 03:45 | Com Áudio-Narrações</p>
+                        </div>
+                    </div>
+
+                    <!-- Barra de Progresso do Áudio -->
+                    <div class="space-y-1">
+                        <div class="w-full bg-blue-900 h-3 rounded-full overflow-hidden border border-blue-700">
+                            <div id="podcast-progress" class="bg-yellow-400 h-full w-0 transition-all duration-300"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-blue-300 font-mono">
+                            <span id="podcast-time-curr">00:00</span>
+                            <span id="podcast-time-total">03:45</span>
+                        </div>
+                    </div>
+
+                    <!-- Controles do Podcast -->
+                    <div class="flex justify-center items-center gap-4">
+                        <button onclick="rewindPodcast()" class="p-3 bg-blue-900 hover:bg-blue-800 rounded-full text-yellow-400 transition" aria-label="Voltar 10 segundos no áudio">
+                            <i data-lucide="rotate-ccw" class="w-5 h-5" aria-hidden="true"></i>
+                        </button>
+                        
+                        <button id="btn-play-podcast" onclick="togglePodcastPlay()" class="p-4 bg-yellow-400 hover:bg-yellow-300 text-blue-950 rounded-full font-bold shadow-lg transition transform active:scale-95" aria-label="Reproduzir ou pausar podcast em áudio">
+                            <i data-lucide="play" id="icon-podcast-play" class="w-7 h-7" aria-hidden="true"></i>
+                        </button>
+
+                        <button onclick="forwardPodcast()" class="p-3 bg-blue-900 hover:bg-blue-800 rounded-full text-yellow-400 transition" aria-label="Avançar 10 segundos no áudio">
+                            <i data-lucide="rotate-cw" class="w-5 h-5" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Transcrição Interativa do Podcast -->
+                <div class="lg:col-span-7 bg-blue-950/40 p-6 rounded-2xl border border-blue-800/60 space-y-4">
+                    <h3 class="font-bold text-lg text-yellow-300 flex items-center gap-2">
+                        <i data-lucide="align-left" class="w-5 h-5" aria-hidden="true"></i>
+                        Transcrição do Episódio do Podcast
+                    </h3>
+                    
+                    <div id="transcricao-podcast" class="space-y-3 text-sm text-blue-100 max-h-56 overflow-y-auto pr-2">
+                        <p class="p-2 rounded hover:bg-blue-900/50 transition">
+                            <strong class="text-yellow-400">Host (Ana):</strong> Seja bem-vindo ao podcast AcessibilizaWeb. Hoje conversamos sobre como criar sites que funcionam para todas as pessoas.
+                        </p>
+                        <p class="p-2 rounded hover:bg-blue-900/50 transition">
+                            <strong class="text-yellow-400">Convidado (Carlos):</strong> Exatamente, Ana! A acessibilidade web não é um recurso adicional, é um direito básico de navegação e autonomia.
+                        </p>
+                        <p class="p-2 rounded hover:bg-blue-900/50 transition">
+                            <strong class="text-yellow-400">Host (Ana):</strong> E como a Inteligência Artificial entra nisso?
+                        </p>
+                        <p class="p-2 rounded hover:bg-blue-900/50 transition">
+                            <strong class="text-yellow-400">Convidado (Carlos):</strong> A IA atua acelerando a geração de descrições visuais, convertendo texto em vozes naturais e facilitando a tradução em Linguagem de Sinais.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- RODAPÉ DO SITE -->
+    <footer role="contentinfo" class="bg-blue-950 text-white mt-16 border-t-4 border-yellow-400 py-10">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="space-y-3">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="accessibility" class="w-6 h-6 text-yellow-400" aria-hidden="true"></i>
+                    <span class="font-bold text-lg">AcessibilizaWeb</span>
+                </div>
+                <p class="text-xs text-blue-200">
+                    Plataforma dedicada ao ensino, incentivo e demonstração prática de acessibilidade digital e Inteligência Artificial inclusiva.
+                </p>
+            </div>
+
+            <div class="space-y-2">
+                <h4 class="font-bold text-yellow-400 text-sm">Diretrizes de Acessibilidade</h4>
+                <ul class="text-xs text-blue-200 space-y-1">
+                    <li>✓ WCAG 2.1 Nível AAA / AA</li>
+                    <li>✓ Leitor de Tela Sintetizador Nativo</li>
+                    <li>✓ Atendimento a Pessoas Surdas e Cegas</li>
+                    <li>✓ Suporte e Interpretação para Libras</li>
+                </ul>
+            </div>
+
+            <div class="space-y-2">
+                <h4 class="font-bold text-yellow-400 text-sm">Comandos Rápidos</h4>
+                <p class="text-xs text-blue-200">Use a tecla <kbd class="px-1.5 py-0.5 bg-blue-900 rounded font-mono border border-blue-700">Tab</kbd> para navegar entre elementos interativos.</p>
+                <p class="text-xs text-blue-200">Aperte os botões de fonte no topo para ajustar a leitura ideal.</p>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 mt-8 pt-4 border-t border-blue-900 text-center text-xs text-blue-400">
+            © 2026 AcessibilizaWeb - Desenvolvido sob princípios de Design Universal e Acessibilidade Plena.
+        </div>
+    </footer>
+
+    <!-- LOGIC E SCRIPT JS PURA DE ACESSIBILIDADE -->
+    <script>
+        // Inicializar Lucide Icons
+        lucide.createIcons();
+
+        // 1. GERENCIAMENTO DE ESCALA DE FONTE DINÂMICA
+        let currentFontScale = 1.0;
+        const maxFontScale = 1.5;
+        const minFontScale = 0.8;
+
+        function changeFontSize(delta) {
+            currentFontScale = Math.min(Math.max(currentFontScale + delta, minFontScale), maxFontScale);
+            document.documentElement.style.setProperty('--font-scale', currentFontScale);
+            announceToScreenReader(`Tamanho do texto alterado para ${Math.round(currentFontScale * 100)} por cento`);
+        }
+
+        function resetFontSize() {
+            currentFontScale = 1.0;
+            document.documentElement.style.setProperty('--font-scale', 1.0);
+            announceToScreenReader("Tamanho do texto restaurado para o padrão original");
+        }
+
+        // 2. MODO ALTO CONTRASTE
+        function toggleContrast() {
+            document.body.classList.toggle('high-contrast');
+            const isHighContrast = document.body.classList.contains('high-contrast');
+            announceToScreenReader(isHighContrast ? "Modo de alto contraste ativado" : "Modo de alto contraste desativado");
+        }
+
+        // 3. EXPANSÃO DE DESCRIÇÕES DETALHADAS (DETAILS)
+        function toggleDetails(elementId) {
+            const el = document.getElementById(elementId);
+            if (el) {
+                const isHidden = el.classList.contains('hidden');
+                el.classList.toggle('hidden');
+                const button = document.querySelector(`[aria-controls="${elementId}"]`);
+                if (button) {
+                    button.setAttribute('aria-expanded', !isHidden);
+                }
+            }
+        }
+
+        // 4. SÍNTESE DE VOZ - WEB SPEECH API (LEITOR DE TELA E ÁUDIO)
+        let synth = window.speechSynthesis;
+        let currentUtterance = null;
+        let isSpeakingPage = false;
+
+        function speakText(text) {
+            if (!synth) {
+                alert("A síntese de voz não é suportada neste navegador.");
+                return;
+            }
+
+            // Parar leituras anteriores
+            synth.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'pt-BR';
+            utterance.rate = 1.0;
+            
+            currentUtterance = utterance;
+            synth.speak(utterance);
+        }
+
+        function readPageText() {
+            const btnLabel = document.getElementById('speech-btn-label');
+            if (isSpeakingPage) {
+                synth.cancel();
+                isSpeakingPage = false;
+                if (btnLabel) btnLabel.innerText = "Ler Página";
+                announceToScreenReader("Leitura da página pausada.");
+            } else {
+                const mainContent = document.getElementById('conteudo-principal').innerText;
+                speakText("Iniciando leitura do conteúdo principal. " + mainContent);
+                isSpeakingPage = true;
+                if (btnLabel) btnLabel.innerText = "Parar Leitura";
+            }
+        }
+
+        // Announcer para leitores de tela ARIA-Live
+        function announceToScreenReader(message) {
+            let ariaAnnouncer = document.getElementById('aria-announcer');
+            if (!ariaAnnouncer) {
+                ariaAnnouncer = document.createElement('div');
+                ariaAnnouncer.id = 'aria-announcer';
+                ariaAnnouncer.setAttribute('aria-live', 'polite');
+                ariaAnnouncer.setAttribute('aria-atomic', 'true');
+                ariaAnnouncer.className = 'sr-only absolute w-1 h-1 p-0 overflow-hidden clip-rect-0 border-0';
+                document.body.appendChild(ariaAnnouncer);
+            }
+            ariaAnnouncer.innerText = message;
+        }
+
+        // 5. SUPORTE E SIMULADOR DE LIBRAS / ÁUDIO EM LIBRAS
+        function toggleLibrasWidget() {
+            const widget = document.getElementById('libras-widget');
+            if (widget) {
+                widget.classList.toggle('hidden');
+                const isVisible = !widget.classList.contains('hidden');
+                if (isVisible) {
+                    playLibrasAudio("Janela de interpretação em Libras aberta. Você pode acionar explicações em áudio e sinais visualmente.");
+                }
+            }
+        }
+
+        function playLibrasAudio(textExplicacao) {
+            // Garante que o widget de Libras está visível
+            const widget = document.getElementById('libras-widget');
+            if (widget && widget.classList.contains('hidden')) {
+                widget.classList.remove('hidden');
+            }
+
+            const statusText = document.getElementById('libras-status-text');
+            const handsAnim = document.getElementById('libras-hands-animation');
+
+            if (statusText) statusText.innerText = "Interpretando em Libras e Áudio: " + textExplicacao;
+            if (handsAnim) handsAnim.classList.remove('hidden');
+
+            // Executa a narração explicativa
+            speakText("Suporte em Libras: " + textExplicacao);
+
+            // Reseta a animação após término simulado
+            setTimeout(() => {
+                if (handsAnim) handsAnim.classList.add('hidden');
+                if (statusText) statusText.innerText = "Tradutor Visual Pronto. Clique nos áudios em Libras pelo site.";
+            }, 6000);
+        }
+
+        // 6. CONTROLES DO PLAYER DE VÍDEO SIMULADO
+        let isVideoPlaying = false;
+
+        function toggleVideoPlay() {
+            const icon = document.getElementById('icon-play');
+            const sub = document.getElementById('video-sim-subtitle');
+
+            if (!isVideoPlaying) {
+                isVideoPlaying = true;
+                if (icon) icon.setAttribute('data-lucide', 'pause');
+                if (sub) sub.innerText = "Vídeo em reprodução... A IA analisa os quadros e descreve visualmente cada cena.";
+                speakText("Vídeo iniciado: Inteligência Artificial e Descrição Automática de Conteúdo.");
+            } else {
+                isVideoPlaying = false;
+                if (icon) icon.setAttribute('data-lucide', 'play');
+                if (sub) sub.innerText = "Vídeo pausado. Clique em Play para continuar.";
+                synth.cancel();
+            }
+            lucide.createIcons();
+        }
+
+        function toggleCC() {
+            const cc = document.getElementById('cc-overlay');
+            if (cc) {
+                cc.classList.toggle('hidden');
+                announceToScreenReader(cc.classList.contains('hidden') ? "Legendas desativadas" : "Legendas ativadas");
+            }
+        }
+
+        function speakAudioDescription() {
+            speakText("Áudio-Descrição do Vídeo: Na tela, uma animação demonstra a inteligência artificial escaneando um site e criando descrições de imagens e áudio de forma totalmente automatizada para pessoas cegas.");
+        }
+
+        // 7. CONTROLES DO PODCAST SIMULADO
+        let isPodcastPlaying = false;
+        let podcastProgressInterval = null;
+        let podcastSeconds = 0;
+
+        function togglePodcastPlay() {
+            const icon = document.getElementById('icon-podcast-play');
+            const progressBar = document.getElementById('podcast-progress');
+            const timeCurr = document.getElementById('podcast-time-curr');
+
+            if (!isPodcastPlaying) {
+                isPodcastPlaying = true;
+                if (icon) icon.setAttribute('data-lucide', 'pause');
+                
+                speakText("Podcast iniciado: O Futuro da Web Inclusiva e Inteligência Artificial.");
+
+                podcastProgressInterval = setInterval(() => {
+                    podcastSeconds += 1;
+                    const percent = Math.min((podcastSeconds / 225) * 100, 100);
+                    if (progressBar) progressBar.style.width = percent + '%';
+                    
+                    const mins = Math.floor(podcastSeconds / 60).toString().padStart(2, '0');
+                    const secs = (podcastSeconds % 60).toString().padStart(2, '0');
+                    if (timeCurr) timeCurr.innerText = `${mins}:${secs}`;
+
+                    if (podcastSeconds >= 225) {
+                        togglePodcastPlay();
+                        podcastSeconds = 0;
+                    }
+                }, 1000);
+            } else {
+                isPodcastPlaying = false;
+                if (icon) icon.setAttribute('data-lucide', 'play');
+                clearInterval(podcastProgressInterval);
+                synth.cancel();
+            }
+            lucide.createIcons();
+        }
+
+        function rewindPodcast() {
+            podcastSeconds = Math.max(0, podcastSeconds - 10);
+            announceToScreenReader("Podcast voltado 10 segundos");
+        }
+
+        function forwardPodcast() {
+            podcastSeconds = Math.min(225, podcastSeconds + 10);
+            announceToScreenReader("Podcast avançado 10 segundos");
+        }
+    </script>
+</body>
+</html>
